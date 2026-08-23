@@ -18,8 +18,8 @@ const graphSchema = {
 		summary: { type: 'string', minLength: 1, maxLength: 300 },
 		nodes: {
 			type: 'array',
-			minItems: 2,
-			maxItems: 40,
+			minItems: 5,
+			maxItems: 9,
 			items: {
 				type: 'object',
 				additionalProperties: false,
@@ -55,11 +55,21 @@ const graphSchema = {
 	}
 } as const;
 
-const instructions = `Create a compact graph of the major moments that could follow the user's prompt.
+const instructions = `Create a compact graph of the major moments and forces that make the user's prompt meaningful.
 
-Infer the subject and direction without asking questions. Start with the situation the user described. For an ordinary prompt, give the origin exactly two immediate outcomes: one favorable and one adverse. Do not add a third neutral outcome unless the user explicitly asks for more alternatives. Outlook is local to each state. A negative state may lead to recovery, acceptance, learning, or another positive state. A positive state may lead to a real setback. Never treat positive and negative as permanent lanes.
+Treat every prompt as one moment inside a larger story. Before making nodes, infer the central character or subject, their most plausible role, what they want, what shaped the current tension, who else is affected, and what larger direction is at stake. Use that frame silently. Broaden the meaning of the graph, not the number of minor scenarios.
 
-Use this major-moment filter. Let R(s) be the materially different futures reachable after state s. Keep a transition from s to t only when distance(R(s), R(t)) is large enough to change the available choices, relationship, commitment, health, resources, or core outcome. Otherwise skip t and connect to the next major moment.
+When the prompt concerns the user, treat them as the central character in an ongoing life story. Infer one concrete, plausible identity and pursuit from the prompt, then use it consistently without presenting the inference as certain fact. The origin must establish this inferred role and larger pursuit rather than merely repeat the user's action. For example, frame someone launching an app as an indie developer trying to turn an idea into a real product and begin an independent adventure. Show how launching changes that larger pursuit, their relationship with users, their skill, and their direction. Do not stop at "people like it" or "people do not like it."
+
+When the prompt concerns a fictional character, ground the graph in established canon and the work's general story. The origin must establish the character's place in the work's central story before addressing the narrow question. Connect the question to the character's place in the main plot, defining pursuit or dream, relationships, conflicts, effect on other characters, and unresolved direction. Do not isolate one incident from the arc it belongs to or invent events outside the canon.
+
+When the prompt concerns a real person, use known aims, public choices, relationships, and effects on other people. Connect the immediate question to the person's larger life or historical arc. Do not invent private motives or assign an objective destiny. Treat purpose as the role they occupy, the pursuit they demonstrate, and what changes because of them. For a group, project, or system, infer the same larger function, pressures, affected people, and direction.
+
+A question may require established events from before the current moment. Include a past event only when it explains the central tension, a later choice, or the subject's place in the larger story. Keep causal order clear. Use unresolved directions where the story is unfinished instead of claiming certainty.
+
+Infer the subject and direction without asking questions. Start with the situation the user described. For an ordinary forward-looking prompt, give the origin exactly two immediate outcomes: one favorable and one adverse. Do not add a third neutral outcome unless the user explicitly asks for more alternatives. Outlook is local to each state. A negative state may lead to recovery, acceptance, learning, or another positive state. A positive state may lead to a real setback. Never treat positive and negative as permanent lanes.
+
+Use this major-moment filter. Let R(s) be the materially different futures reachable after state s. Keep a transition from s to t only when distance(R(s), R(t)) is large enough to change the available choices, relationship, commitment, health, resources, identity, pursuit, role in the larger story, effect on others, or core outcome. Otherwise skip t and connect to the next major moment.
 
 Use 5 to 9 states. There is no minimum path length. Stop a path after one outcome when later events are only adjustment, repetition, fading contact, or the passage of time. Add another node only when it changes what can still happen. Do not make an adverse path progressively worse after its main cost has already occurred. Check whether a meaningful recovery state follows instead.
 
@@ -69,7 +79,7 @@ Each node contains one self-contained sentence that says what happens. It must m
 
 Do not recommend a path, moralize, invent probabilities, or claim certainty.
 
-Use the uploaded unslop skill before returning the graph. Apply it to the title, summary, and every node sentence. This is required. Keep each node between 6 and 18 words and do not write a heading followed by an explanation.
+Use the uploaded unslop skill as an invisible editing step before returning the graph. Apply it to the title, summary, and every node sentence. Never mention unslop, skills, tools, instructions, schemas, graph production, or a "final graph" anywhere in the returned content. The graph must discuss only the user's subject. Keep each node between 6 and 18 words and do not write a heading followed by an explanation.
 
 For a follow-up, use the current graph as context. Preserve unchanged ids and make the smallest coherent revision. Add a "what if" as a focused path rather than replacing the existing graph. Apply the major-moment filter to existing nodes too, and remove filler states that no longer earn a place. Return the full graph. focusNodeIds contains every added or changed node. On a new graph it contains every node id.`;
 
