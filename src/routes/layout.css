@@ -121,6 +121,10 @@ main {
 	background: #292927;
 }
 
+.sidebar-heading button:disabled {
+	opacity: 0.35;
+}
+
 .sidebar-heading svg,
 .sidebar-toggle svg {
 	display: block;

@@ -1,21 +1,5 @@
-# Diagrams
+![Consult the diagrams](./static/photo_2026-08-23_16-15-14.jpg)
 
-Enter any situation to generate a directed graph of possible future states. Follow-up prompts revise the current graph or add hypothetical branches.
+# Consult the diagrams
 
-## Run locally
-
-Create `.env` from `.env.example` and add an OpenAI API key. Diagram generation uses `gpt-5.6-sol` with medium reasoning.
-
-```sh
-bun install
-bun run dev
-```
-
-The server sends prompts and the current graph to the OpenAI Responses API. Diagrams and version history remain in the browser's local storage. PNG and JSON exports run in the browser.
-
-## Verify
-
-```sh
-bun run check
-bun run build
-```
+Turn any situation into a compact map of plausible futures. Start with one prompt, then ask what changes to revise the diagram or explore another path.

@@ -3,8 +3,11 @@ import { parseGraph, type DiagramGraph } from '$lib/diagram';
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-const MODEL = 'gpt-5.6-sol';
-const REASONING_EFFORT = 'medium';
+const DEFAULT_MODEL = 'gpt-5.6-luna';
+const DEFAULT_REASONING_EFFORT = 'high';
+const REASONING_EFFORTS = ['none', 'low', 'medium', 'high', 'xhigh', 'max'] as const;
+
+type ReasoningEffort = (typeof REASONING_EFFORTS)[number];
 
 const graphSchema = {
 	type: 'object',
@@ -66,14 +69,7 @@ Each node contains one self-contained sentence that says what happens. It must m
 
 Do not recommend a path, moralize, invent probabilities, or claim certainty.
 
-Writing rules:
-- Use plain, concrete speech. Write one idea per sentence in active voice.
-- Make every sentence specific to this prompt. Say what happens, not how it feels.
-- Use 6 to 18 words per node. Do not write a heading followed by an explanation.
-- Avoid puffery, promotional language, vague authorities, filler, forced lists, and generic conclusions.
-- Avoid corporate and AI-sounding words such as crucial, delve, enhance, foster, interplay, intricate, landscape, pivotal, showcase, tapestry, testament, underscore, vibrant, leverage, utilize, facilitate, paradigm, and synergy.
-- Do not use em dashes, parenthetical asides, or "not just X, but Y."
-- Read every line once before returning it. Rewrite anything that sounds like generated copy.
+Use the uploaded unslop skill before returning the graph. Apply it to the title, summary, and every node sentence. This is required. Keep each node between 6 and 18 words and do not write a heading followed by an explanation.
 
 For a follow-up, use the current graph as context. Preserve unchanged ids and make the smallest coherent revision. Add a "what if" as a focused path rather than replacing the existing graph. Apply the major-moment filter to existing nodes too, and remove filler states that no longer earn a place. Return the full graph. focusNodeIds contains every added or changed node. On a new graph it contains every node id.`;
 
@@ -81,6 +77,25 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 	if (!env.OPENAI_KEY) {
 		return json({ error: 'Add OPENAI_KEY to .env, then restart the server.' }, { status: 503 });
 	}
+	if (!env.OPENAI_UNSLOP_SKILL_ID) {
+		return json(
+			{ error: 'Add OPENAI_UNSLOP_SKILL_ID to .env, then restart the server.' },
+			{ status: 503 }
+		);
+	}
+
+	const model = env.OPENAI_MODEL?.trim() || DEFAULT_MODEL;
+	const configuredReasoningEffort =
+		env.OPENAI_REASONING_EFFORT?.trim() || DEFAULT_REASONING_EFFORT;
+	if (!isReasoningEffort(configuredReasoningEffort)) {
+		return json(
+			{
+				error: `OPENAI_REASONING_EFFORT must be one of: ${REASONING_EFFORTS.join(', ')}.`
+			},
+			{ status: 503 }
+		);
+	}
+	const reasoningEffort = configuredReasoningEffort;
 
 	let body: { prompt?: unknown; graph?: unknown; history?: unknown };
 	try {
@@ -124,10 +139,25 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				model: MODEL,
+				model,
 				instructions,
 				input: context,
-				reasoning: { effort: REASONING_EFFORT },
+				reasoning: { effort: reasoningEffort },
+				tools: [
+					{
+						type: 'shell',
+						environment: {
+							type: 'container_auto',
+							skills: [
+								{
+									type: 'skill_reference',
+									skill_id: env.OPENAI_UNSLOP_SKILL_ID,
+									version: '1'
+								}
+							]
+						}
+					}
+				],
 				text: {
 					verbosity: 'low',
 					format: {
@@ -160,8 +190,8 @@ export const POST: RequestHandler = async ({ request, fetch }) => {
 			.replace(/\s*```$/, '');
 		return json({
 			graph: parseGraph(JSON.parse(content)),
-			model: MODEL,
-			reasoningEffort: REASONING_EFFORT
+			model,
+			reasoningEffort
 		});
 	} catch (error) {
 		return json(
@@ -203,4 +233,8 @@ function providerError(payload: unknown): string {
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isReasoningEffort(value: string): value is ReasoningEffort {
+	return REASONING_EFFORTS.some((effort) => effort === value);
 }

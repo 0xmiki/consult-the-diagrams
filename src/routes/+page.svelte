@@ -166,8 +166,15 @@
 	}
 
 	function createDiagram(): void {
-		const diagram = createSavedDiagram();
-		diagrams.unshift(diagram);
+		const existingDraft = diagrams.find(
+			(diagram) =>
+				diagram.name === 'Untitled' &&
+				diagram.versionIndex === -1 &&
+				diagram.versions.length === 0 &&
+				diagram.prompts.length === 0
+		);
+		const diagram = existingDraft ?? createSavedDiagram();
+		if (!existingDraft) diagrams.unshift(diagram);
 		activeId = diagram.id;
 		sidebarOpen = false;
 		errorMessage = '';
@@ -607,7 +614,13 @@
 	<aside class="history-sidebar" class:open={sidebarOpen}>
 		<div class="sidebar-heading">
 			<strong>Diagrams</strong>
-			<button type="button" onclick={createDiagram} aria-label="New diagram" title="New diagram">
+			<button
+				type="button"
+				onclick={createDiagram}
+				disabled={!loaded}
+				aria-label="New diagram"
+				title="New diagram"
+			>
 				<PlusIcon size={19} weight="regular" />
 			</button>
 		</div>
