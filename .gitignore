@@ -5,6 +5,8 @@ node_modules
 .vercel
 .netlify
 .wrangler
+worker-configuration.d.ts
+worker-startup.cpuprofile
 /.svelte-kit
 /build
 
@@ -15,6 +17,8 @@ Thumbs.db
 # Env
 .env
 .env.*
+.dev.vars
+.dev.vars.*
 !.env.example
 !.env.test
 
